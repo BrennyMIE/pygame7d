@@ -1,0 +1,40 @@
+in pygame, you can create a game window by telling the 'display' part of the library to create a 'surface' of a specific size.
+the function for this is pygame.display.set_mode() 
+This function needs one key piece of information: the size of the window.
+You need to provide the size as a pair of numbers: (width, height). In Python, a pair of numbers grouped by parentheses like this is called a tuple.
+Finally, we need to store this window in a variable. A variable is just a name we create to hold a value, so we can use it later. A common name for the main game window is screen.
+
+You are absolutely right. The while running: loop will run forever, keeping the window open.
+And you've also spotted the exact problem we need to solve next.
+If you press Ctrl+C in the terminal, you're killing the script from the outside.
+If you click the window's 'X' button, the operating system closes the window, but our Python script doesn't know about it! The while running: loop is still running in the terminal (it's now "headless"), and it never gets to the pygame.quit() line.
+We need a way to tell our loop that the user has clicked the 'X' button.
+
+The Python command to look at each item in a list is a for loop.
+It works like this: for [item_name] in [list_name]:
+
+You just spent time in the back room drawing your beautiful blue background onto the screen canvas. But you never actually told Pygame to take that canvas and put it on display in the gallery.
+This technique is called double buffering. It lets us get our entire frame ready (draw the background, the player, the enemies, the score) on our hidden screen canvas without the user seeing all the individual, messy steps. When it's all perfect, we "flip" the hidden canvas with the visible one.
+The command to tell Pygame, "I'm done drawing for this frame, show this to the user now!" is: pygame.display.flip()
+
+Now that we have our "sky," let's add the "ground" for your platformer.
+The easiest way to do this is to draw a rectangle.
+Just like filling the screen, drawing a rectangle requires three pieces of information:
+Where to draw it? (We want to draw it onto our screen canvas.)
+What color should it be? (Let's use a green, like (0, 128, 0).)
+What shape and position? This is the tricky part.
+For a rectangle, Pygame needs a Rect object. This object holds 4 values:
+The x-coordinate (how far from the left)
+The y-coordinate (how far from the top)
+The width
+The height
+Remember, in computer graphics, the (0, 0) coordinate is at the top-left corner.
+X increases to the right.
+Y increases downward.
+So, if our screen is 800 wide and 600 high:
+The top-left corner is (0, 0).
+The bottom-right corner is (800, 600).
+Let's say we want a 100-pixel-high strip of ground at the bottom.
+It should start at an x of 0.
+It needs a width of 800.
+It needs a height of 100.
