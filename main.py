@@ -22,8 +22,13 @@ tile_height = 64 # create the variable tile_height, which specifies the height o
 background_texture_src = pygame.image.load('world_background.png')
 bg_texture = pygame.transform.scale(background_texture_src, (screen_width, screen_height))
 
-ground_texture_src = pygame.image.load('ground_texture.png')
-ground_texture = pygame.transform.scale(ground_texture_src, (tile_width, tile_height))
+ground_texture_biome1_src = pygame.image.load('ground_texture_plains.png')
+ground_texture_biome2_src = pygame.image.load('ground_texture_jungle.png')
+ground_texture_biome3_src = pygame.image.load('ground_texture_desert.png')
+ground_texture_biome4_src = pygame.image.load('ground_texture_mountains.png')
+ground_texture_biome5_src = pygame.image.load('ground_texture_tundra.png')
+
+ground_texture = pygame.transform.scale(ground_texture_biome1_src, (tile_width, tile_height))
 
 player_sprite_src = pygame.image.load('player_sprite.png')
 player_sprite = pygame.transform.scale(player_sprite_src, (tile_width, tile_height * 2))
@@ -59,6 +64,15 @@ player_max_speed_y = 50 # Define the player's maximum y speed, in pixels per cyc
 player_min_x = 0 # Define the minimum allowed x coordinate of the player
 player_max_x = world_scroll + screen_width / 2 - player_width / 2 + player_width # define the maximum allowed x value for the player, when accounting for the size of the window.
 
+biome_size = 20000 # Define how many pixels wide each biome / level is to be Default = 20000
+biome_1 = 'Mountains'
+biome_2 = 'Desert'
+biome_3 = 'Jungle'
+biome_4 = 'Tundra'
+biome_5 = 'Plains'
+current_biome = biome_1
+
+
 # --- Begin Game Loop ---
 
 while running: # everything below this will happen as long as 'running' is 'True'
@@ -84,7 +98,24 @@ while running: # everything below this will happen as long as 'running' is 'True
         player_current_speed_x = 0
 
 # --- Begin Update Loop ---
-
+    if player_x > biome_size and player_x < biome_size * 2:
+        current_biome = biome_2
+    if player_x > biome_size*2 and player_x < biome_size * 3:
+        current_biome = biome_3
+    if player_x > biome_size*3 and player_x < biome_size * 4:
+        current_biome = biome_4
+    if player_x > biome_size*4 and player_x < biome_size * 5:
+        current_biome = biome_5
+    if current_biome == biome_1:
+        ground_texture = pygame.transform.scale(ground_texture_biome1_src, (tile_width, tile_height))
+    if current_biome == biome_2:
+        ground_texture = pygame.transform.scale(ground_texture_biome2_src, (tile_width, tile_height))
+    if current_biome == biome_3:
+        ground_texture = pygame.transform.scale(ground_texture_biome3_src, (tile_width, tile_height))
+    if current_biome == biome_4:
+        ground_texture = pygame.transform.scale(ground_texture_biome4_src, (tile_width, tile_height))
+    if current_biome == biome_5:
+        ground_texture = pygame.transform.scale(ground_texture_biome5_src, (tile_width, tile_height))
     # Update the minimum and maximum allowed x position for the player:
     player_max_x = world_scroll + screen_width / 2 - player_width / 2 + player_width
     player_min_x = world_scroll
