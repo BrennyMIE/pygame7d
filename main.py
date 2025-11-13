@@ -1,11 +1,12 @@
 import pygame # This imports the pygame library into the script, so that it's functions are available to be used.
-import random
+from noise import pnoise1
+import math
 # In Python, when you want to use a function from a library you've imported, you connect them with a dot (.). This is often called dot notation.
 
 pygame.init() # This tells python: "Inside the pygame library, find the function called init, and run it; the parentheses are how you tell the program to run the specified function."
 
-screen_width = 1280 # Create the variable screen_width. Default = 1280
-screen_height = 720 # Create the variable screen_height. Default = 720
+screen_width = 1920 # Create the variable screen_width. Default = 1280
+screen_height = 1080 # Create the variable screen_height. Default = 720
 
 screen = pygame.display.set_mode((screen_width, screen_height)) # this creates a variable 'screen' and assigns the value of the created surface using pygame.display.set_mode()
 
@@ -18,6 +19,9 @@ tile_width = 64  # create the variable tile_width, which specifies the height of
 tile_height = 64 # create the variable tile_height, which specifies the height of the floor. Default = 100
 
 # Load textures:
+background_texture_src = pygame.image.load('world_background.png')
+bg_texture = pygame.transform.scale(background_texture_src, (screen_width, screen_height))
+
 ground_texture_src = pygame.image.load('ground_texture.png')
 ground_texture = pygame.transform.scale(ground_texture_src, (tile_width, tile_height))
 
@@ -29,27 +33,31 @@ renderzone_right = screen_width - tile_width # add a buffer of 1 tile (!!!!!!!!c
 renderzone_left = 0 + tile_width # also add the 1 tile buffer (bllarrghhhh inverted for testing!!!!!!)
 renderzone_top = 0 - tile_height # probably not needed
 renderzone_bottom = screen_height + tile_height # also probably not needed
+ground_level = screen_height - tile_height
+new_ground_y_max = ground_level
+new_ground_y_min = 0
+
+world_scroll = 0 # initialise the world_scroll variable, which defines how far the world has currently scrolled.
+world_speed = 0 # initialise the speed that the world is currently scrolling. Default = 0
+ground_rects = [pygame.Rect(0, screen_height - tile_height, tile_width, tile_height)] # Create the list ground_rects, which will contain a list of rectangles used for drawing the ground. Initialise it with a single rectangle that is the height of the floor, and the width of the screen.
 
 player_width = tile_width # create the variable for the player_width. Default = 50
 player_height = tile_height*2 # create the variable for the player_height. Default = 50
 
 gravity = 2 # initialise the speed of gravity.
-jump_force = 30 # set the force with which the player jumps
+jump_force = gravity * 13 # set the force with which the player jumps
 
-player_x = screen_width / 2 - player_width / 2 # create the variable player_x, which initialises the player's x position. Default value = screen_width/2 - player_width/2 - which is the middle of the screen.
-player_y = screen_height - tile_height - player_height # create the variable player_y, which initialises the player's y position. Default value = screen_height - tile_height - player_height - which is standing on the ground
+player_x = 0#screen_width / 2 - player_width / 2 # create the variable player_x, which initialises the player's x position. Default value = screen_width/2 - player_width/2 - which is the middle of the screen.
+player_y = 0#screen_height - tile_height - player_height # create the variable player_y, which initialises the player's y position. Default value = screen_height - tile_height - player_height - which is standing on the ground
 player_acceleration = 0.8 # define the player's acceleration speed. Default = 0.2
 score = 0 # initialise the score as 0
 
 player_current_speed_x = 0 # Initialise the player's current x speed. Default = 0
 player_current_speed_y = 0 # Initialise the player's current y speed. Default = 0
-player_max_speed_x = 8 # Define the player's maximum speed, in pixels per cycle.
-player_max_speed_y = 100 # Define the player's maximum y speed, in pixels per cycle.
+player_max_speed_x = 7 # Define the player's maximum speed, in pixels per cycle.
+player_max_speed_y = 50 # Define the player's maximum y speed, in pixels per cycle.
 player_min_x = 0 # Define the minimum allowed x coordinate of the player
-player_max_x = screen_width / 2 - player_width / 2 + player_width # define the maximum allowed x value for the player, when accounting for the size of the window.
-world_scroll = 0 # initialise the world_scroll variable, which defines how far the world has currently scrolled.
-world_speed = 0 # initialise the speed that the world is currently scrolling. Default = 0
-ground_rects = [pygame.Rect(0, screen_height - tile_height, tile_width, tile_height)] # Create the list ground_rects, which will contain a list of rectangles used for drawing the ground. Initialise it with a single rectangle that is the height of the floor, and the width of the screen.
+player_max_x = world_scroll + screen_width / 2 - player_width / 2 + player_width # define the maximum allowed x value for the player, when accounting for the size of the window.
 
 # --- Begin Game Loop ---
 
@@ -65,11 +73,6 @@ while running: # everything below this will happen as long as 'running' is 'True
     # if the player's x coordinate is greater than or equal to the maximum allowed x coordinate and the world is not currently scrolling, and the player is moving, then transfer the player speed into world scrolling speed (which will provide the illusion that the player is moving 'forward' in the game world)
     if player_x >= player_max_x and world_speed == 0 and player_current_speed_x > 0:
         world_speed = player_current_speed_x
-
-    # If the player's x position is greater than or equal to the maximum allowed x coordinate, then move the player to his maximum allowed x coordinate (because he's not allowed to go past it!) and set his speed to zero.
-    if player_x >= player_max_x:
-        player_x = player_max_x
-        player_current_speed_x = 0
     
     # If the players x positions is less than or equal to the minimum allowed x position (he's not allowed here!) then move him to his minimum allowed x position, and set his speed to zero.
     if player_x <= player_min_x:
@@ -77,11 +80,14 @@ while running: # everything below this will happen as long as 'running' is 'True
         player_current_speed_x = 0
 
     # If the players current speed is less than the minimum allowed speed in either direction (one cycle of acceleration), then set his speed to zero (to prevent any weird things happening where he accidentally ends up moving by a fraction of this amount)
-    if player_current_speed_x < 0.2 and player_current_speed_x > -0.2:
+    if player_current_speed_x < player_acceleration and player_current_speed_x > -player_acceleration:
         player_current_speed_x = 0
 
 # --- Begin Update Loop ---
 
+    # Update the minimum and maximum allowed x position for the player:
+    player_max_x = world_scroll + screen_width / 2 - player_width / 2 + player_width
+    player_min_x = world_scroll
     # set player on ground to false every frame
     player_on_ground = False
     can_jump = 0
@@ -112,9 +118,19 @@ while running: # everything below this will happen as long as 'running' is 'True
     # define 'last_ground_rect' during the beginning of the update loop, so that's it's value is always set to the latest piece of ground
     last_ground_rect = ground_rects[-1]
 
+    # define the noise_value variable
+    noise_factor = 0.0002
+    noise_value = pnoise1(last_ground_rect.right * noise_factor)
+    scaled_noise_value = noise_value * tile_height * (screen_height/tile_height)
+    new_ground_y = (round((ground_level - scaled_noise_value)/tile_height)*tile_height)+(screen_height-math.floor(screen_height/tile_height)*tile_height)
+    if new_ground_y > new_ground_y_max:
+        new_ground_y = new_ground_y_max
+    if new_ground_y < new_ground_y_min:
+        new_ground_y = new_ground_y_min
+
     # if the right side of the latest piece of ground, minus the world_scroll value, is less than or equal to the width of the screen, then create a new piece of ground, 'new_ground', identical to the previous piece, then append it to the list ground_rects
     if last_ground_rect.right - world_scroll <= renderzone_right:
-        new_ground = pygame.Rect(last_ground_rect.right,screen_height-tile_height,tile_width, tile_height)
+        new_ground = pygame.Rect(last_ground_rect.right,new_ground_y,tile_width, tile_height)
         ground_rects.append(new_ground)
     
     # while the length of ground_rects is greater than zero (which should always be true), then set the variable 'oldest_ground' to the first item in the list 'ground_rects'
@@ -133,7 +149,7 @@ while running: # everything below this will happen as long as 'running' is 'True
 
     if keys[pygame.K_d]: # check if the D key is pressed, then:
         # if the player's current speed is less than his maximum allowed speed, and he has room to move to the right, and the world is not scrolling, then increase his speed by his acceleration amount.
-        if player_current_speed_x < player_max_speed_x and player_x+1 <= player_max_x and world_speed == 0:
+        if player_current_speed_x < player_max_speed_x:
             player_current_speed_x += player_acceleration
 
         # if the player's current x position is greater than or equal to his maximum allowed x coordinate (which should start the world scrolling), and the world is not yet scrolling at the maximum speed of the player, then add his acceleration to the current world scrolling speed
@@ -151,7 +167,7 @@ while running: # everything below this will happen as long as 'running' is 'True
             world_speed = 0
 
         # if the player's current speed LEFT is less than his maximum allowed speed LEFT (notice the *-1), and there is still room for him to move left, AND the world is not scrolling, then add the player's acceleration to his movement LEFT (by subtacting the player's acceleration from his x speed, so that it goes negative, and he moves left)
-        if player_current_speed_x > player_max_speed_x*-1 and player_x-1 >= player_min_x and world_speed == 0:
+        if player_current_speed_x > -player_max_speed_x:
             player_current_speed_x -= player_acceleration
 
     # if both A and D are pressed or NEITHER are pressed AND the player is moving to the right, then subtract his acceleration value from his current speed, so he slows down.
@@ -167,7 +183,7 @@ while running: # everything below this will happen as long as 'running' is 'True
         world_speed -= player_acceleration
 
     # if the player's current speed is greater than or equal to the player's acceleration value or -1* the acceleration value (the player is moving), then shift the player's x position by the current speed of the player
-    if player_current_speed_x >= player_acceleration or player_current_speed_x <= -1*player_acceleration:
+    if player_current_speed_x >= player_acceleration or player_current_speed_x <= -player_acceleration:
         player_x += player_current_speed_x
 
     # if the world scrolling speed is above 0 and the player is at his maximum x position, then scroll the world by the current world scrolling speed.
@@ -175,8 +191,11 @@ while running: # everything below this will happen as long as 'running' is 'True
         world_scroll += world_speed
         score += world_speed/100
     
-    if keys[pygame.K_SPACE] and can_jump == 1:
-        player_current_speed_y -= jump_force
+    if keys[pygame.K_SPACE]: # If the spacebar is currently pressed:
+        if can_jump == 1: # and can jump is 1 (the player is on the ground)
+            player_current_speed_y -= jump_force # then jump
+        else:
+            player_current_speed_y -= jump_force/jump_force  # allow player to jump higher if he holds the jump button
 
 # --- Begin Event Loop ---
     for event in pygame.event.get(): # each item in the list 'pygame.event.get()' is assigned to the 'event'
@@ -198,14 +217,15 @@ while running: # everything below this will happen as long as 'running' is 'True
 
 # --- Begin Draw Loop ---
 
-    screen.fill((173, 216, 230)) # fill the screen with a light blue colour (for the sky)
+    # Draw the background texture which is used for the sky
+    screen.blit(bg_texture, (0,0))
 
     # --- Begin Draw All Ground Pieces ---
     for ground in ground_rects:
         screen.blit(ground_texture, (ground.x - world_scroll, ground.y))
     # --- End Draw All Ground Pieces ---
 
-    screen.blit(player_sprite, (player_x, player_y)) # Draw the player sprite
+    screen.blit(player_sprite, (player_x - world_scroll, player_y)) # Draw the player sprite
     
     # Score Text variable declaration:
     score_text = debug_font.render(f"Score: {round(score)}", True, (30, 30, 30)) # render the font 'debug font' with the value of the current score, colour off-black.
