@@ -33,18 +33,18 @@ renderzone_bottom = screen_height + tile_height # also probably not needed
 player_width = tile_width # create the variable for the player_width. Default = 50
 player_height = tile_height*2 # create the variable for the player_height. Default = 50
 
-gravity = 0.6 # initialise the speed of gravity.
-jump_force = 15 # set the force with which the player jumps
+gravity = 2 # initialise the speed of gravity.
+jump_force = 30 # set the force with which the player jumps
 
 player_x = screen_width / 2 - player_width / 2 # create the variable player_x, which initialises the player's x position. Default value = screen_width/2 - player_width/2 - which is the middle of the screen.
 player_y = screen_height - tile_height - player_height # create the variable player_y, which initialises the player's y position. Default value = screen_height - tile_height - player_height - which is standing on the ground
-player_acceleration = 0.2 # define the player's acceleration speed. Default = 0.2
+player_acceleration = 0.8 # define the player's acceleration speed. Default = 0.2
 score = 0 # initialise the score as 0
 
 player_current_speed_x = 0 # Initialise the player's current x speed. Default = 0
 player_current_speed_y = 0 # Initialise the player's current y speed. Default = 0
-player_max_speed_x = 5 # Define the player's maximum speed, in pixels per cycle.
-player_max_speed_y = 20 # Define the player's maximum y speed, in pixels per cycle.
+player_max_speed_x = 8 # Define the player's maximum speed, in pixels per cycle.
+player_max_speed_y = 100 # Define the player's maximum y speed, in pixels per cycle.
 player_min_x = 0 # Define the minimum allowed x coordinate of the player
 player_max_x = screen_width / 2 - player_width / 2 + player_width # define the maximum allowed x value for the player, when accounting for the size of the window.
 world_scroll = 0 # initialise the world_scroll variable, which defines how far the world has currently scrolled.
